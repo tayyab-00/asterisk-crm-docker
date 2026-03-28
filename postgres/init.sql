@@ -48,7 +48,33 @@ CREATE TABLE IF NOT EXISTS ps_endpoints (
     max_audio_streams INTEGER DEFAULT 1, max_video_streams INTEGER DEFAULT 1
 );
 
-CREATE TABLE IF NOT EXISTS ps_aors (
+CREATE TABLE IF NOT EXISTS ps_contacts (
+    id VARCHAR(255) NOT NULL PRIMARY KEY,
+    uri VARCHAR(511),
+    expiration_time BIGINT,
+    qualify_frequency INTEGER DEFAULT 0,
+    outbound_proxy VARCHAR(255),
+    path TEXT,
+    user_agent VARCHAR(255),
+    qualify_timeout FLOAT DEFAULT 3.0,
+    reg_server VARCHAR(20),
+    authenticate_qualify VARCHAR(3) DEFAULT 'no',
+    via_addr VARCHAR(40),
+    via_port INTEGER DEFAULT 0,
+    call_id VARCHAR(255),
+    endpoint VARCHAR(40),
+    prune_on_boot VARCHAR(3) DEFAULT 'no'
+);
+
+CREATE TABLE IF NOT EXISTS ps_endpoint_id_ips (
+    id VARCHAR(40) NOT NULL PRIMARY KEY,
+    endpoint VARCHAR(40),
+    match VARCHAR(80),
+    srv_lookups VARCHAR(3) DEFAULT 'yes',
+    match_header VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS ps_endpoints (
     id VARCHAR(40) NOT NULL PRIMARY KEY,
     contact VARCHAR(255), default_expiration INTEGER DEFAULT 3600,
     mailboxes VARCHAR(80), max_contacts INTEGER DEFAULT 5,
