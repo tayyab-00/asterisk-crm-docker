@@ -33,6 +33,10 @@ echo "==> Writing Asterisk configs"
 # pjsip.conf — inject IP into webrtc_endpoint template
 sed -i "s|media_address=ASTERISK_IP_PLACEHOLDER|media_address=$IP|g" /etc/asterisk/pjsip.conf
 sed -i "s|media_address=127.0.0.1|media_address=$IP|g" /etc/asterisk/pjsip.conf
+
+# extensions.conf — inject GSM gateway IP for outbound
+GSM_IP=${GSM_GATEWAY_IP:-192.168.0.200}
+sed -i "s|GSM_GATEWAY_IP_PLACEHOLDER|$GSM_IP|g" /etc/asterisk/extensions.conf
 sed -i "s|cert_file=.*|cert_file=$CERT|g" /etc/asterisk/pjsip.conf
 sed -i "s|priv_key_file=.*|priv_key_file=$KEY|g" /etc/asterisk/pjsip.conf
 sed -i "s|dtls_cert_file=.*|dtls_cert_file=$CERT|g" /etc/asterisk/pjsip.conf
