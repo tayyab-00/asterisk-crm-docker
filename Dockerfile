@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -8,7 +8,6 @@ RUN apt-get update && apt-get install -y \
     asterisk-modules \
     asterisk-core-sounds-en \
     asterisk-moh-opsound-wav \
-    libasterisk-agi-perl \
     postgresql-client \
     openssl \
     gettext-base \

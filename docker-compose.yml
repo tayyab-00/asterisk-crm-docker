@@ -1,4 +1,4 @@
-version: '3.8'
+# version: '3.8'
 
 services:
 
@@ -86,4 +86,5 @@ volumes:
   asterisk_keys:
   asterisk_recordings:
   asterisk_moh:
+  asterisk_sounds:
   asterisk_logs:
