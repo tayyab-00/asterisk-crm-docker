@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS ps_endpoint_id_ips (
     match_header VARCHAR(255)
 );
 
-CREATE TABLE IF NOT EXISTS ps_endpoints (
+CREATE TABLE IF NOT EXISTS ps_aors (
     id VARCHAR(40) NOT NULL PRIMARY KEY,
     contact VARCHAR(255), default_expiration INTEGER DEFAULT 3600,
     mailboxes VARCHAR(80), max_contacts INTEGER DEFAULT 5,

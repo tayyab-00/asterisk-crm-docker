@@ -14,7 +14,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U asterisk -d asterisk_cdr"]
       interval: 5s
@@ -33,10 +33,11 @@ services:
       - asterisk_keys:/etc/asterisk/keys
       - asterisk_recordings:/var/spool/asterisk/monitor
       - asterisk_moh:/var/lib/asterisk/moh
+      - asterisk_sounds:/var/lib/asterisk/sounds/custom
       - asterisk_logs:/var/log/asterisk
     environment:
       ASTERISK_IP: ${ASTERISK_IP:-127.0.0.1}
-      PG_HOST: ${PG_HOST:-127.0.0.1}
+      PG_HOST: 127.0.0.1
       PG_PORT: ${PG_PORT:-5432}
       PG_DB: ${PG_DB:-asterisk_cdr}
       PG_USER: ${PG_USER:-asterisk}
@@ -47,13 +48,14 @@ services:
     entrypoint: ["/entrypoint.sh"]
 
   # ── Optional: SSH reverse tunnel to AWS backend ──────────────────────────────
-  # Only starts if AWS_HOST and AWS_KEY_PATH are set in .env
   # Forwards: 15432 -> PostgreSQL, 15038 -> AMI on AWS
+  # Start with: docker compose --profile tunnel up -d
   tunnel:
     image: alpine:3.19
     container_name: asterisk_tunnel
     restart: always
-    profiles: ["tunnel"]  # only starts with: docker compose --profile tunnel up
+    profiles: ["tunnel"]
+    network_mode: host
     volumes:
       - ${AWS_KEY_PATH:-/dev/null}:/root/.ssh/aws_key:ro
     environment:
