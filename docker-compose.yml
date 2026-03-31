@@ -6,9 +6,10 @@ services:
     image: postgres:16
     container_name: asterisk_db
     restart: always
+    profiles: ["with-db"]
     environment:
-      POSTGRES_DB: asterisk_cdr
-      POSTGRES_USER: asterisk
+      POSTGRES_DB: ${PG_DB:-asterisk_cdr}
+      POSTGRES_USER: ${PG_USER:-asterisk}
       POSTGRES_PASSWORD: ${PG_PASSWORD:-asterisk123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -28,12 +29,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+        required: false
     network_mode: host
     volumes:
       - asterisk_keys:/etc/asterisk/keys
       - asterisk_recordings:/var/spool/asterisk/monitor
-      - asterisk_moh:/var/lib/asterisk/moh
-      - asterisk_sounds:/var/lib/asterisk/sounds/custom
+      - /var/lib/asterisk/moh:/var/lib/asterisk/moh
+      - ${SOUNDS_PATH:-/var/lib/asterisk/sounds/custom}:/var/lib/asterisk/sounds/custom
       - asterisk_logs:/var/log/asterisk
     environment:
       ASTERISK_IP: ${ASTERISK_IP:-127.0.0.1}
@@ -45,6 +47,8 @@ services:
       AMI_SECRET: ${AMI_SECRET:-tayyab}
       ARI_PASSWORD: ${ARI_PASSWORD:-crm_ari_pass123}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      AGI_HOST: ${AGI_HOST:-127.0.0.1}
+      AGI_PORT: ${AGI_PORT:-4573}
     entrypoint: ["/entrypoint.sh"]
 
   # ── Optional: SSH reverse tunnel to AWS backend ──────────────────────────────
@@ -63,12 +67,13 @@ services:
       AWS_USER: ${AWS_USER:-ubuntu}
       TUNNEL_PG_PORT: ${TUNNEL_PG_PORT:-15432}
       TUNNEL_AMI_PORT: ${TUNNEL_AMI_PORT:-15038}
+      TUNNEL_AGI_PORT: ${TUNNEL_AGI_PORT:-14573}
     command: >
       sh -c "
         apk add --no-cache openssh-client autossh &&
         chmod 600 /root/.ssh/aws_key &&
         ssh -i /root/.ssh/aws_key -o StrictHostKeyChecking=no $$AWS_USER@$$AWS_HOST
-          'fuser -k $${TUNNEL_PG_PORT}/tcp 2>/dev/null; fuser -k $${TUNNEL_AMI_PORT}/tcp 2>/dev/null; true' 2>/dev/null || true &&
+          'fuser -k $${TUNNEL_PG_PORT}/tcp 2>/dev/null; fuser -k $${TUNNEL_AMI_PORT}/tcp 2>/dev/null; fuser -k $${TUNNEL_AGI_PORT}/tcp 2>/dev/null; true' 2>/dev/null || true &&
         sleep 2 &&
         exec autossh -M 0 -N
           -o ServerAliveInterval=30
@@ -78,6 +83,7 @@ services:
           -i /root/.ssh/aws_key
           -R 127.0.0.1:$${TUNNEL_PG_PORT}:127.0.0.1:5432
           -R 127.0.0.1:$${TUNNEL_AMI_PORT}:127.0.0.1:5038
+          -R 127.0.0.1:$${TUNNEL_AGI_PORT}:127.0.0.1:4573
           $$AWS_USER@$$AWS_HOST
       "
 
@@ -85,6 +91,4 @@ volumes:
   postgres_data:
   asterisk_keys:
   asterisk_recordings:
-  asterisk_moh:
-  asterisk_sounds:
   asterisk_logs:

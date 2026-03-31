@@ -17,6 +17,9 @@ RUN apt-get update && apt-get install -y \
 # Copy all config templates
 COPY asterisk/config/ /etc/asterisk/
 
+# Copy schema — applied on every start against whatever DB is configured
+COPY postgres/init.sql /docker-entrypoint-initdb.d/init.sql
+
 # Copy entrypoint
 COPY scripts/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

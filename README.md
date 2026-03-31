@@ -13,10 +13,25 @@
 ASTERISK_IP=192.168.X.X   ← set to this machine's LAN IP (only required change)
 ```
 
-### 2. Run
+### 2. Setup host directories (run once)
+```bash
+bash scripts/setup-host.sh
+```
+This creates `/var/lib/asterisk/sounds/custom` with correct permissions so the
+Django backend can write IVR audio files that Asterisk can play.
+
+### 3. Run
+
+**New client (no existing PostgreSQL):**
+```bash
+docker compose --profile with-db up -d
+```
+
+**Existing PostgreSQL already running on this machine:**
 ```bash
 docker compose up -d
 ```
+Make sure `PG_HOST`, `PG_USER`, `PG_PASSWORD`, `PG_DB` in `.env` match your existing DB.
 
 ### 3. Verify
 ```bash

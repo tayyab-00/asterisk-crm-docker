@@ -45,7 +45,9 @@ CREATE TABLE IF NOT EXISTS ps_endpoints (
     rtcp_mux VARCHAR(3) DEFAULT 'yes', webrtc VARCHAR(3) DEFAULT 'yes',
     dtls_auto_generate_cert VARCHAR(3) DEFAULT 'no',
     rtp_keepalive INTEGER DEFAULT 15, bundle VARCHAR(3) DEFAULT 'no',
-    max_audio_streams INTEGER DEFAULT 1, max_video_streams INTEGER DEFAULT 1
+    max_audio_streams INTEGER DEFAULT 1, max_video_streams INTEGER DEFAULT 1,
+    media_address VARCHAR(40),
+    allow_unauthenticated_options VARCHAR(3) DEFAULT 'no'
 );
 
 CREATE TABLE IF NOT EXISTS ps_contacts (

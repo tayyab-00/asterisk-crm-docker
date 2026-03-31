@@ -101,6 +101,15 @@ until PGPASSWORD=$PG_PASSWORD psql -h $PG_HOST -p $PG_PORT -U $PG_USER -d $PG_DB
 done
 echo "==> PostgreSQL ready"
 
+# ── 4. Apply schema (idempotent — safe to run on every start) ─────────────────
+# Uses CREATE TABLE IF NOT EXISTS so existing tables are never touched.
+# Works whether using Docker postgres or a client's existing PostgreSQL.
+echo "==> Applying schema to $PG_DB"
+PGPASSWORD=$PG_PASSWORD psql -h $PG_HOST -p $PG_PORT -U $PG_USER -d $PG_DB \
+    -f /docker-entrypoint-initdb.d/init.sql > /dev/null 2>&1 \
+    && echo "==> Schema applied" \
+    || echo "==> Schema apply failed (check DB permissions)"
+
 # ── 4. Sync media_address in realtime DB ─────────────────────────────────────
 # This fixes one-way audio — ensures ALL endpoints in ps_endpoints use the
 # correct LAN IP for RTP, including agent extensions and trunk endpoints.
@@ -110,8 +119,18 @@ PGPASSWORD=$PG_PASSWORD psql -h $PG_HOST -p $PG_PORT -U $PG_USER -d $PG_DB -c \
     "UPDATE ps_endpoints SET media_address='$IP', dtls_cert_file='$CERT', dtls_private_key='$KEY' WHERE media_address IS NULL OR media_address='' OR media_address='127.0.0.1';" \
     2>/dev/null && echo "==> ps_endpoints synced" || echo "==> ps_endpoints sync skipped (table may be empty)"
 
+# Sync AGI address — uses TUNNEL_AGI_PORT if set (remote backend), else local 4573
+AGI_HOST=${AGI_HOST:-127.0.0.1}
+AGI_PORT=${AGI_PORT:-4573}
+echo "==> Syncing AGI address to agi://$AGI_HOST:$AGI_PORT"
+PGPASSWORD=$PG_PASSWORD psql -h $PG_HOST -p $PG_PORT -U $PG_USER -d $PG_DB -c \
+    "UPDATE asterisk_extensions SET appdata='agi://$AGI_HOST:$AGI_PORT,' || split_part(appdata,',',2) WHERE app='AGI' AND appdata LIKE 'agi://%';" \
+    2>/dev/null && echo "==> AGI address synced" || echo "==> AGI sync skipped"
+
 # ── 5. Fix ownership ─────────────────────────────────────────────────────────
 chown -R asterisk:asterisk /etc/asterisk /var/spool/asterisk /var/lib/asterisk /var/log/asterisk 2>/dev/null || true
+mkdir -p /var/lib/asterisk/sounds/custom /var/lib/asterisk/moh /var/spool/asterisk/monitor
+chmod 777 /var/lib/asterisk/sounds/custom /var/lib/asterisk/moh /var/spool/asterisk/monitor
 
 # ── 6. Start Asterisk ─────────────────────────────────────────────────────────
 echo "==> Starting Asterisk"
